@@ -264,7 +264,7 @@ features = torch.cat([torch.sin(projected), torch.cos(projected)], dim=1)
 
 Sudden high learning rates can cause early training instability. We implement linear warmup [4]:
 
-$$\text{lr}(\text{epoch}) = \text{lr}_{\max} \cdot \min\left(1, \frac{\text{epoch}}{\text{warmup_epochs}}\right)$$
+$$\text{lr}(\text{epoch}) $$
 
 **Configuration**: warmup_epochs = 1000, $\text{lr}_{\max}$ = 0.001
 
