@@ -414,7 +414,7 @@ Training observations:
 3. **Fine-tuning** (epochs 10000-30000): ReduceLROnPlateau scheduler enables automatic refinement
 4. **Final Loss**: $\sim 10^{-5}$ after 30k epochs
 
-The smoothed curve shows consistent descent without catastrophic divergence, validating the stabilization techniques (warmup + EMA).
+The smoothed curve shows consistent descent without catastrophic divergence, validating the stabilization techniques (warmup + EMA). However, more sophisticated stabilization techniques are likely needed for further improving performance.
 
 ### Error Heatmap Analysis
 
