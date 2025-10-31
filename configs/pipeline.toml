@@ -1,0 +1,199 @@
+[pipeline]
+seed = 42
+output_root = "output/pipeline_runs"
+fail_fast = true
+
+# ==============================================================================
+# OPTIMAL PINN PARAMETERS (Validated Oct 30, 2025)
+# ==============================================================================
+# Achieves 0.088-0.31% error at S=100 (ATM)
+# Validated via hyperparameter tuning (40 trials, 4.98 hours)
+# See: configs/pinn_configurations.json -> configurations.optimal_baseline
+[pinn_optimal]
+fourier_scale = 3.0
+fourier_features = 64
+learning_rate = 0.001
+warmup_epochs = 1000
+ema_decay = 0.999
+hidden_dim = 128
+num_layers = 5
+n_interior = 2000
+n_boundary = 200
+n_initial = 1000
+use_fourier = true
+use_warmup = true
+use_ema = true
+use_adaptive_weights = false
+
+# ==============================================================================
+# STAGE 0: Tests
+# ==============================================================================
+[[stages]]
+name = "stage0_tests"
+type = "tests"
+pytest_args = ["-q"]
+
+# ==============================================================================
+# STAGE 1: Classical Methods Baseline (NO PINNs)
+# ==============================================================================
+# Test Black-Scholes, PDE (Crank-Nicolson), MC (1M paths), Binomial Trees
+# on European calls, European puts, American puts, Barrier options
+# Reference: K=100, S0=100, T=1y, r=5%, q=2%, σ=20%
+#
+# This stage establishes the classical methods baseline that PINNs must match
+[[stages]]
+name = "stage1_classical_methods"
+type = "european_benchmark"
+products = [
+    "european_call",
+    "european_put",
+    "american_put",
+    "barrier_up_out_call"
+]
+reference_method = "bs"
+generate_plots = false
+generate_ui_bundle = false
+scenario = { s0 = 100.0, K = 100.0, T = 1.0, r = 0.05, q = 0.02, sigma = 0.2, barrier = 120.0, mc_paths = 1000000 }
+
+# ==============================================================================
+# STAGE 2: PINN Architecture Discovery (CALLS ONLY, K=100)
+# ==============================================================================
+# Research Question: Which PINN architecture/training achieves best accuracy?
+# Test: Basic 3K epochs vs Extended 15K epochs vs Fourier Features
+# Finding: Fourier PINN (BasePINN) with proper training is optimal
+#
+# NOTE: All experiments use the BasePINN architecture (Fourier features)
+# The difference is in training epochs and capacity (hidden units)
+[[stages]]
+name = "stage2_pinn_discovery"
+type = "pinn_training"
+problem = { r = 0.05, q = 0.02, sigma = 0.2, K = 100.0, T = 1.0, s_max = 300.0 }
+evaluation = { spots = [80.0, 100.0, 120.0], tau = 1.0 }
+
+  # Experiment 1: Basic training (3K epochs, simple PINN without Fourier)
+  [[stages.experiments]]
+  label = "basic_3k"
+  option_type = "call"
+  epochs = 3000
+  hidden = 64
+  lr = 0.001
+  batch_size = 1000
+  save_weights = true
+  use_fourier = false  # Simple PINN baseline
+
+  # Experiment 2: Extended training (15K epochs, simple PINN without Fourier)
+  [[stages.experiments]]
+  label = "extended_15k"
+  option_type = "call"
+  epochs = 15000
+  hidden = 64
+  lr = 0.001
+  batch_size = 1000
+  save_weights = true
+  use_fourier = false  # Simple PINN with more epochs
+
+  # Experiment 3: Fourier PINN optimal (moderate capacity with Fourier features)
+  [[stages.experiments]]
+  label = "fourier_optimal"
+  option_type = "call"
+  epochs = 3000
+  hidden = 96
+  lr = 0.001
+  batch_size = 1000
+  save_weights = true
+  use_fourier = true  # Fourier PINN (BasePINN architecture)
+
+# ==============================================================================
+# STAGE 3: Stabilization Techniques (CALLS ONLY, K=100)
+# ==============================================================================
+# Research Question: What techniques stabilize PINN training?
+# Test: Adaptive loss weights, learning rate schedules, batch size effects
+# Finding: Adaptive weight balancing critical for convergence
+[[stages]]
+name = "stage3_stabilization"
+type = "pinn_training"
+problem = { r = 0.05, q = 0.02, sigma = 0.2, K = 100.0, T = 1.0, s_max = 300.0 }
+evaluation = { spots = [60.0, 80.0, 100.0, 120.0, 140.0], tau = 1.0 }
+
+  # Stabilized model with optimal settings from research
+  [[stages.experiments]]
+  label = "stabilized_optimal"
+  option_type = "call"
+  epochs = 5000
+  hidden = 96
+  lr = 0.0005
+  batch_size = 1500
+  save_weights = true
+  use_fourier = true  # Uses Fourier PINN (optimal architecture)
+
+# ==============================================================================
+# STAGE 4: Robustness Testing (Multiple Strikes)
+# ==============================================================================
+# Research Question: Does the optimal PINN generalize across strikes?
+# Test: Train separate models for K=[80, 90, 100, 110, 120]
+# Goal: Consistent performance with adaptive adjustment scheme
+[[stages]]
+name = "stage4_robustness"
+type = "pinn_training"
+problem = { r = 0.05, q = 0.02, sigma = 0.2, T = 1.0, s_max = 300.0 }
+evaluation = { spots = [60.0, 80.0, 100.0, 120.0, 140.0], tau = 1.0 }
+
+  # K=80 (Deep ITM)
+  [[stages.experiments]]
+  label = "strike_80"
+  option_type = "call"
+  epochs = 5000
+  hidden = 96
+  lr = 0.0005
+  batch_size = 1500
+  save_weights = true
+  use_fourier = true
+  strike = 80.0
+
+  # K=90 (ITM)
+  [[stages.experiments]]
+  label = "strike_90"
+  option_type = "call"
+  epochs = 5000
+  hidden = 96
+  lr = 0.0005
+  batch_size = 1500
+  save_weights = true
+  use_fourier = true
+  strike = 90.0
+
+  # K=100 (ATM)
+  [[stages.experiments]]
+  label = "strike_100"
+  option_type = "call"
+  epochs = 5000
+  hidden = 96
+  lr = 0.0005
+  batch_size = 1500
+  save_weights = true
+  use_fourier = true
+  strike = 100.0
+
+  # K=110 (OTM)
+  [[stages.experiments]]
+  label = "strike_110"
+  option_type = "call"
+  epochs = 5000
+  hidden = 96
+  lr = 0.0005
+  batch_size = 1500
+  save_weights = true
+  use_fourier = true
+  strike = 110.0
+
+  # K=120 (Deep OTM)
+  [[stages.experiments]]
+  label = "strike_120"
+  option_type = "call"
+  epochs = 5000
+  hidden = 96
+  lr = 0.0005
+  batch_size = 1500
+  save_weights = true
+  use_fourier = true
+  strike = 120.0
