@@ -491,15 +491,15 @@ The 3D visualizations provide intuition for option hedging strategies:
 
 These surfaces are computed via automatic differentiation of the PINN, demonstrating that neural networks can provide smooth, continuous Greeks without finite difference approximations.
 
-### Comparison to Prior Work
+### Comparison to Other Work
 
-Our results compare favorably to related literature:
+Our results are consistent with the broader literature on PINNs for option pricing.
 
 - **Ruf & Wang (2020)** [7]: Neural networks for American options, ~1% error
 - **Beck et al. (2019)** [8]: Deep learning for high-dimensional PDEs
 - **Sirignano & Spiliopoulos (2018)** [9]: DGM method, ~0.1-1% error for European options
 
-Our contribution: Systematic architectural optimization (Fourier features + warmup + EMA) achieving 0.064% error, competitive with Crank-Nicolson (0.007%) and significantly better than Monte Carlo (0.694%). The PINN demonstrates that machine learning methods can match traditional finite difference accuracy while offering superior inference speed.
+These results demonstrate that machine learning methods can match traditional finite difference accuracy while offering superior inference speed.
 
 ---
 
