@@ -3,14 +3,14 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "pinn-options-pricing"
+name = "pinns-options-pricing"
 version = "0.1.0"
 description = "Physics-Informed Neural Networks for European options pricing. Achieves 0.064% error using Fourier features, adaptive weights, and EMA."
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
 authors = [
-    {name = "Junichi Koganemaru", email = "junichi@example.com"}
+    {name = "Junichi Koganemaru"}
 ]
 keywords = [
     "physics-informed-neural-networks",
@@ -29,17 +29,16 @@ classifiers = [
     "Intended Audience :: Financial and Insurance Industry",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Mathematics",
     "Topic :: Office/Business :: Financial"
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/pinn-options-pricing"
-Documentation = "https://github.com/yourusername/pinn-options-pricing#readme"
-Repository = "https://github.com/yourusername/pinn-options-pricing.git"
-Issues = "https://github.com/yourusername/pinn-options-pricing/issues"
+Homepage = "https://github.com/jkoganem/pinns-options-pricing"
+Documentation = "https://github.com/jkoganem/pinns-options-pricing#readme"
+Repository = "https://github.com/jkoganem/pinns-options-pricing.git"
+Issues = "https://github.com/jkoganem/pinns-options-pricing/issues"
 
 dependencies = [
     "numpy>=1.24.0",
