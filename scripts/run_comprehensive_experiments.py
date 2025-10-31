@@ -314,9 +314,10 @@ def experiment_4_training_convergence(info):
     print("EXPERIMENT 4: Training Convergence Analysis")
     print("="*70)
 
-    loss_hist = info.get('loss_history', [])
+    # Try 'losses' first, then 'loss_history' for backwards compatibility
+    loss_hist = info.get('losses', info.get('loss_history', []))
 
-    if not loss_hist:
+    if not loss_hist or len(loss_hist) == 0:
         print("  Warning: No loss history available")
         return
 
