@@ -1,8 +1,7 @@
 # Physics-Informed Neural Networks for Options Pricing
 
-**A Comparative Study of Classical and Machine Learning Methods**
 
-## Abstract
+## Project Overview
 
 This repository implements and compares classical numerical methods and physics-informed neural networks (PINNs) for pricing financial derivatives under the Black-Scholes framework. We demonstrate that appropriately configured PINNs can achieve pricing accuracy competitive with finite difference methods (errors below 0.1%) while offering superior computational efficiency for batch operations. The work includes comprehensive implementations of analytical solutions, finite difference schemes, Monte Carlo simulation, and an optimized PINN architecture validated through systematic hyperparameter tuning.
 
@@ -32,7 +31,7 @@ Traditional numerical methods for option pricing include:
 
 PINNs offer a potential middle ground: they can encode the underlying partial differential equations directly into the neural network loss function, potentially achieving both accuracy and computational efficiency.
 
-### Research Questions
+### Main Questions
 
 1. Can PINNs match the accuracy of classical finite difference methods for European option pricing?
 2. What architectural modifications are necessary to achieve competitive performance?
@@ -42,7 +41,7 @@ PINNs offer a potential middle ground: they can encode the underlying partial di
 
 ## Key Findings
 
-This work demonstrates that Physics-Informed Neural Networks can achieve accuracy competitive with classical numerical methods for option pricing while offering significant computational advantages:
+We find that Physics-Informed Neural Networks can achieve accuracy competitive with classical numerical methods for option pricing while offering significant computational advantages.
 
 ### Main Results
 
@@ -51,9 +50,9 @@ This work demonstrates that Physics-Informed Neural Networks can achieve accurac
 2. **Computational Efficiency**: After one-time training (16 minutes), PINN inference is instantaneous (<1ms per price), matching Black-Scholes analytical formula speed while maintaining numerical accuracy comparable to PDE solvers.
 
 3. **Architectural Contributions**: Systematic combination of three techniques proved essential:
-   - **Fourier Feature Embeddings** (σ=3.0): Reduced error from 5-10% to 1-2%
+   - **Fourier Feature Embeddings** ($\sigma$=3.0): Reduced error from 5-10% to 1-2%
    - **Learning Rate Warmup** (1000 epochs): Reduced error from 1-2% to 0.5%
-   - **Exponential Moving Average** (β=0.999): Reduced error from 0.5% to <0.1%
+   - **Exponential Moving Average** ($\beta$=0.999): Reduced error from 0.5% to <0.1%
 
 4. **Hyperparameter Validation**: Bayesian optimization over 40 trials confirmed the baseline configuration as optimal, with lower learning rates (0.001 vs 0.002) providing better final accuracy despite slower initial convergence.
 
@@ -71,7 +70,7 @@ This work demonstrates that Physics-Informed Neural Networks can achieve accurac
 
 ## Mathematical Framework
 
-### The Black-Scholes Partial Differential Equation
+### The Black-Scholes PDE
 
 The price $V(S,t)$ of a European option on an underlying asset with price $S$ at time $t$ satisfies the Black-Scholes PDE:
 
@@ -83,6 +82,8 @@ where:
 - $\sigma$: volatility of the underlying asset
 - $S$: underlying asset price
 - $t$: time
+
+See [11] for more details on the derivation of this equation.
 
 ### Time-to-Maturity Formulation
 
@@ -216,12 +217,15 @@ The PINN loss function consists of three components:
 $$\mathcal{L}_{\text{total}} = \mathcal{L}_{\text{PDE}} + \mathcal{L}_{\text{boundary}} + \mathcal{L}_{\text{initial}}$$
 
 **PDE Loss** (residual of Black-Scholes equation):
+
 $$\mathcal{L}_{\text{PDE}} = \frac{1}{N_{\text{int}}} \sum_{i=1}^{N_{\text{int}}} \left[\frac{\partial V}{\partial \tau} - \frac{1}{2}\sigma^2 S^2 \frac{\partial^2 V}{\partial S^2} - (r-q)S\frac{\partial V}{\partial S} + rV\right]^2$$
 
 **Boundary Loss**:
+
 $$\mathcal{L}_{\text{boundary}} = \frac{1}{N_{\text{bnd}}} \sum_{i=1}^{N_{\text{bnd}}} \left[V(S_{\text{bnd}}, \tau) - V_{\text{exact}}(S_{\text{bnd}}, \tau)\right]^2$$
 
 **Initial Loss** (terminal condition):
+
 $$\mathcal{L}_{\text{initial}} = \frac{1}{N_{\text{init}}} \sum_{i=1}^{N_{\text{init}}} \left[V(S, 0) - \max(S - K, 0)\right]^2$$
 
 The derivatives are computed via automatic differentiation, a key advantage of neural network frameworks.
@@ -230,10 +234,10 @@ The derivatives are computed via automatic differentiation, a key advantage of n
 
 Our optimized PINN architecture consists of:
 
-**Input Layer**: $(S, \tau) \to$ 2D input
-**Fourier Feature Embedding**: Random Fourier features for high-frequency learning [3]
-**Hidden Layers**: 5 layers $\times$ 128 neurons with $\tanh$ activation
-**Output Layer**: Single neuron (option price $V$)
+- **Input Layer**: $(S, \tau) \to$ 2D input
+- **Fourier Feature Embedding**: Random Fourier features for high-frequency learning [3]
+- **Hidden Layers**: 5 layers $\times$ 128 neurons with $\tanh$ activation
+- **Output Layer**: Single neuron (option price $V$)
 
 ### Architectural Enhancements
 
@@ -260,7 +264,7 @@ features = torch.cat([torch.sin(projected), torch.cos(projected)], dim=1)
 
 Sudden high learning rates can cause early training instability. We implement linear warmup [4]:
 
-$$\text{lr}(\text{epoch}) = \text{lr}_{\max} \cdot \min\left(1, \frac{\text{epoch}}{\text{warmup\_epochs}}\right)$$
+$$\text{lr}(\text{epoch}) = \text{lr}_{\max} \cdot \min\left(1, \frac{\text{epoch}}{\text{warmup_epochs}}\right)$$
 
 **Configuration**: warmup_epochs = 1000, $\text{lr}_{\max}$ = 0.001
 
